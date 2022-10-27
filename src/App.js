@@ -74,7 +74,7 @@ function App() {
             helperText={jsonError && 'JSON 파싱 오류'}
             onFocusCapture={handleFocusCapture}
           />
-          <Grid container sx={{ my: 1 }}>
+          <Grid container sx={{ mt: 1 }}>
             <Grid item xs={4}></Grid>
             <Grid item xs={4} sx={{ textAlign: 'center' }}>
               <Button
@@ -98,7 +98,7 @@ function App() {
             <Alert
               onClose={handleClose}
               severity="success"
-              sx={{ maxWidth: 'md' }}
+              sx={{ mt: 1, maxWidth: 'md' }}
             >
               복사되었습니다.
             </Alert>
