@@ -8,12 +8,23 @@ import {
   FormControlLabel,
   Grid,
   TextField,
+  Typography,
 } from '@mui/material';
 import { useCallback, useRef, useState } from 'react';
+
+function has3OverSameUnit(groupA, groupB) {
+  let count = 0;
+  groupA.forEach((unitA) => {
+    if (groupB.some((unitB) => unitB.unit_id === unitA.unit_id)) count += 1;
+  });
+
+  return count > 2;
+}
 
 function App() {
   const [jsonError, setJsonError] = useState(false);
   const [open, setOpen] = useState(false);
+  const [recordTime, setRecordTime] = useState({ to: 0, from: 0 });
   const textElement = useRef();
   const isReverseInputElement = useRef();
   const alertTimer = useRef();
@@ -25,25 +36,38 @@ function App() {
   const handleConvert = useCallback(async () => {
     try {
       const stringJSON = textElement.current.value;
-      const {
+      const reversed = isReverseInputElement.current.checked;
+
+      let {
         data: { battle_list: data },
       } = JSON.parse(stringJSON);
-      const stringList = data.map(
-        ({ order_num, user_name, total_damage }) =>
-          `${order_num}\t${user_name}\t${total_damage}`
-      );
-      const reversed = isReverseInputElement.current.checked;
-      const text = (reversed ? stringList.reverse() : stringList).join('\n');
+
+      data = reversed ? data.reverse() : data;
+      const time = {};
+      const text = data
+        .map((d, i) => {
+          if (i === 0) time.from = Number(d.battle_end_time) * 1000;
+          if (i === data.length - 1) time.to = Number(d.battle_end_time) * 1000;
+
+          const isCarried = data
+            .filter(
+              (e, j) => j < i && e.target_viewer_id === d.target_viewer_id
+            )
+            .some((e) => has3OverSameUnit(d.units, e.units));
+          return `${d.order_num}\t${d.user_name}\t${d.total_damage}\t${isCarried}`;
+        })
+        .join('\n');
+
+      setRecordTime(time);
       await navigator.clipboard.writeText(text);
       textElement.current.value = '';
-      if (alertTimer.current) {
-        clearTimeout(alertTimer.current);
-      }
+
+      if (alertTimer.current) clearTimeout(alertTimer.current);
       setOpen(true);
       alertTimer.current = setTimeout(() => {
         setOpen(false);
         alertTimer.current = undefined;
-      }, 3000);
+      }, 10000);
     } catch (error) {
       if (error instanceof SyntaxError) {
         setJsonError(true);
@@ -100,7 +124,11 @@ function App() {
               severity="success"
               sx={{ mt: 1, maxWidth: 'md' }}
             >
-              복사되었습니다.
+              <Typography>복사되었습니다.</Typography>
+              <Typography>
+                {new Date(recordTime.from).toLocaleString()} ~{' '}
+                {new Date(recordTime.to).toLocaleString()}
+              </Typography>
             </Alert>
           )}
         </CardContent>
