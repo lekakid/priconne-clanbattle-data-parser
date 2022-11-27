@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "PCDP",
+  "name": "프리코네 클랜배틀 데이터 파서",
   "icons": [
     {
       "src": "favicon.ico",
